@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react'
 
 import { auth, db } from '../../firebaseConnection'
 import { signOut } from 'firebase/auth'
-import { addDoc, collection, onSnapshot, query, orderBy, where, doc, deleteDoc } from 'firebase/firestore'
+import { addDoc, collection, onSnapshot, query, orderBy, where, doc, deleteDoc, updateDoc } from 'firebase/firestore'
 
 function Admin() {
 
   const [tarefaInput, setTarefaInput] = useState('')
   const [user, setUser] = useState('')
   const [tarefas, setTarefas] = useState([])
+  const [edit, setEdit] = useState({})
 
   useEffect(() => {
     async function loadTarefas() {
@@ -51,6 +52,11 @@ function Admin() {
       return;
     }
 
+    if(edit?.id){
+      handleUpdateTarefa();
+      return
+    }
+
     await addDoc(collection(db, "tarefas"), {
       tarefa: tarefaInput,
       created: new Date(),
@@ -75,6 +81,28 @@ function Admin() {
     await deleteDoc(docRef)
   }
 
+  function editTarefa(item){
+    setTarefaInput(item.tarefa)
+    setEdit(item)
+  }
+
+  async function handleUpdateTarefa(){
+    const docRef = doc(db, 'tarefas', edit.id)
+    await updateDoc(docRef, {
+      tarefa: tarefaInput,
+    })
+    .then(()=>{
+      console.log('Tarefa atualizada')
+      setTarefaInput('')
+      setEdit({})
+    })
+    .catch((err)=>{
+      console.log('Erro ao atualizar tarefa '+ err)
+      setTarefaInput('')
+      setEdit({})      
+    })
+  }
+
   return (
     <>
       <div className="admin-container">
@@ -84,14 +112,18 @@ function Admin() {
             value={tarefaInput}
             onChange={(e) => setTarefaInput(e.target.value)} />
 
-          <button className='btn-register' type='submit'>Registrar tarefa</button>
+          {Object.keys(edit).length > 0 ? (
+            <button className='btn-register' style={{backgroundColor: '#6add39'}} type='submit'>Atualizar tarefa</button>
+          ): (
+            <button className='btn-register' type='submit'>Registrar tarefa</button>
+          )}
         </form>
 
         {tarefas.map((item)=>(
           <article key={item.id} className='list'>
           <p>{item.tarefa}</p>
           <div>
-            <button>editar</button>
+            <button onClick={()=>{editTarefa(item)}} >editar</button>
             <button onClick={()=>{deleteTarefa(item.id)}} className='btn-delete'>concluir</button>
           </div>
         </article>
