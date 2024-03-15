@@ -1,34 +1,34 @@
-import {useState, useEffect} from 'react'
-import { Navigate } from 'react-router-dom'
-import { auth } from '../firebaseConnection'
+import { useState, useEffect } from 'react'
 
+import { auth } from '../firebaseConnection'
 import { onAuthStateChanged } from 'firebase/auth'
 
+import { Navigate } from 'react-router-dom'
 
-
-function Private(children){
+export default function Private({ children }){
   const [loading, setLoading] = useState(true);
-  const [signed, setSigned] = useState(false)
-  useEffect(()=>{
+  const [signed, setSigned] = useState(false);
+
+  useEffect(() => {
     async function checkLogin(){
-      const unsub = onAuthStateChanged(auth,(user) =>{
-        if(user){
-          //Usuário logado
+      const unsub = onAuthStateChanged(auth, (user) => {
+         //se tem user logado
+         if(user){
           const userData = {
             uid: user.uid,
             email: user.email,
-
           }
 
-          localStorage.setItem('@datailUser', JSON.stringify(userData))
+          localStorage.setItem("@detailUser", JSON.stringify(userData))
 
-          setLoading(false)
-          setSigned(true)
-        }
-        else{
-          setLoading(false)
-          setSigned(false)
-        }
+          setLoading(false);
+          setSigned(true);
+
+         } else{
+           //nao possui user logado
+           setLoading(false);
+           setSigned(false);
+         }
       })
     }
 
@@ -42,12 +42,8 @@ function Private(children){
   }
 
   if(!signed){
-    return(
-      <Navigate to="/"/>
-    )
+    return <Navigate to="/"/>
   }
 
-  return children
+  return children;
 }
-
-export default Private;
